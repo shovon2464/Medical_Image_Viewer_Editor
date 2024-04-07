@@ -4,6 +4,5 @@
 
 * CD into the project and run npm install the
 
-* 
 * To run the app write ``` "npm run start" ``` in terminal and navigate to http://localhost:8080.
 
