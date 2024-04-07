@@ -1,0 +1,153 @@
+.container {
+  display: flex;
+  align-items: stretch;
+  flex-direction: column;
+  justify-content: space-between;
+  position: absolute;
+  top: 5px;
+  left: 17%;
+  background: rgba(128, 128, 128, 0.5);
+  border-radius: 5px;
+  padding: 2px;
+  border: 0.5px solid black;
+  box-sizing: border-box;
+}
+.fullScreen {
+    position: absolute;
+    width: 100vw;
+    height: 100vh;
+    top: 0;
+    left: 0;
+    overflow: hidden;
+    background: black;
+    margin: 0;
+    padding: 0;
+  }  
+.fullParentSize {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    overflow: hidden;
+  }
+  .dropButton {
+    font-size: small;
+    display: inline-block;
+    padding: 15px 25px;
+    border: none;
+    border-radius: 5px;
+    background-color: rgb(0, 166, 155); /* Teal color */
+    color: white;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    margin-left:5%;
+    margin-top: 70px;
+    transition: background-color 0.3s ease;
+  }
+  .dropButton2 {
+    font-size: small;
+    display: inline-block;
+    padding: 15px 25px;
+    border: none;
+    border-radius: 5px;
+    background-color: rgb(119, 140, 139); /* Teal color */
+    color: white;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    margin-left:5%;
+    margin-top: 70px;
+    transition: background-color 0.3s ease;
+  }
+ 
+.bigFileDrop {
+
+  cursor: pointer;
+  
+}
+
+.selector {
+  position: absolute;
+  top: 5px;
+  left: 400px;
+  transform: translate(-100%, 0px);
+  border: none;
+  
+  color: green;
+  border: none;
+} 
+
+select {
+  -moz-appearance: none;
+}
+
+select option {
+  color: black;
+}
+
+select:focus {
+  outline: none;
+  border: none;
+}
+
+.piecewiseWidget {
+  position: absolute;
+  top: calc(10px + 1em);
+  left: 5px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 5px;
+}
+
+.shadow {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  border: none;
+  background: transparent;
+  color: white;
+  border: none;
+}
+
+.progress {
+  flex: none;
+  font-size: 50px;
+  color: black;
+  z-index: 1;
+  background: rgba(128,128,128,.5);
+  padding: 20px;
+  border-radius: 10px;
+  user-select: none;
+} 
+
+.fpsMonitor {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  background-color: rgba(255, 255, 255, 0.5);
+  border-radius: 5px;
+  border: solid 1px gray;
+} 
+
+.buttonContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start; 
+  margin-top: 50px; /* Adjust margin as needed */
+  margin-left: 0%
+}
+
+.buttonContainer button {
+  margin-bottom: 10px; /* Spacing between buttons */
+}
+
+.emptyrenderWindow {
+  width: 1450px;
+  height: 900px;
+  border: 2px solid black;
+  margin-top: -37%;
+  margin-left: 20%;
+  background-color: black;
+  /* Add other styling as needed */
+}
