@@ -2,6 +2,7 @@
 import '@kitware/vtk.js/favicon';
 import '@kitware/vtk.js/Rendering/Profiles/Volume';
 import '@kitware/vtk.js/Rendering/Profiles/Geometry';
+import '@kitware/vtk.js/Rendering/Profiles/Glyph';
 import macro from '@kitware/vtk.js/macros';
 import HttpDataAccessHelper from '@kitware/vtk.js/IO/Core/DataAccessHelper/HttpDataAccessHelper';
 import vtkBoundingBox from '@kitware/vtk.js/Common/DataModel/BoundingBox';
@@ -24,13 +25,27 @@ import vtkHttpDataSetReader from '@kitware/vtk.js/IO/Core/HttpDataSetReader';
 import vtkImageMarchingCubes from '@kitware/vtk.js/Filters/General/ImageMarchingCubes';
 import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 import vtkActor from '@kitware/vtk.js/Rendering/Core/Actor';
-import  controlPanelISO from "./controlPanelISO.html";
+import controlPanelISO from "./controlPanelISO.html";
 import style from 'style-loader!css-loader?modules!./customstyles.css';
 import vtkPiecewiseGaussianWidget from '@kitware/vtk.js/Interaction/Widgets/PiecewiseGaussianWidget';
 // Force the loading of HttpDataAccessHelper to support gzip decompression
 import '@kitware/vtk.js/IO/Core/DataAccessHelper/HttpDataAccessHelper';
 
+import vtkPolyLineWidget from '@kitware/vtk.js/Widgets/Widgets3D/PolyLineWidget';
+import vtkWidgetManager from '@kitware/vtk.js/Widgets/Core/WidgetManager';
+import vtkInteractorObserver from '@kitware/vtk.js/Rendering/Core/InteractorObserver';
+import {bindSVGRepresentation} from './SVGHelpers';
+import controlPanel from './controlPanel.html';
+import vtkPolyData from '@kitware/vtk.js/Common/DataModel/PolyData';
+import vtkPoints from '@kitware/vtk.js/Common/Core/Points';
+import vtkXMLPolyDataWriter from '@kitware/vtk.js/IO/XML/XMLPolyDataWriter';
+import vtkXMLWriter from '@kitware/vtk.js/IO/XML/XMLWriter';
+import vtkXMLPolyDataReader from '@kitware/vtk.js/IO/XML/XMLPolyDataReader';
 
+
+
+
+const { computeWorldToDisplay } = vtkInteractorObserver;
 
 
 
@@ -66,9 +81,9 @@ function preventDefaults(e) {
 }
 // ----------------------------------------------------------------------------
 
+
 function createViewerSegmentation(rootContainer, fileContents, options) {
 
-  /*
   const div1 = document.createElement("div");
   rootContainer.appendChild(div1);
 
@@ -82,11 +97,16 @@ function createViewerSegmentation(rootContainer, fileContents, options) {
   const renderWindow = fullScreenRenderer.getRenderWindow();
   renderWindow.getInteractor().setDesiredUpdateRate(15);
 
+  const mapper = vtkVolumeMapper.newInstance();
+  const actor = vtkVolume.newInstance();
+
+  actor.setMapper(mapper);
+
   // Set the size and z-index of the fullScreenRenderer container
   fullScreenRenderer.getContainer().style.width = "1420px";
   fullScreenRenderer.getContainer().style.height = "780px";
   fullScreenRenderer.getContainer().style.marginLeft = "20%";
-  fullScreenRenderer.getContainer().style.marginTop =  "0%";
+  fullScreenRenderer.getContainer().style.marginTop =  "20%";
 
   // Resize the fullScreenRenderer1
   fullScreenRenderer.resize();
@@ -95,32 +115,132 @@ function createViewerSegmentation(rootContainer, fileContents, options) {
   const vtiReader = vtkXMLImageDataReader.newInstance({ fetchGzip: true });
   vtiReader.parseAsArrayBuffer(fileContents);
   const source = vtiReader.getOutputData();
+  mapper.setInputData(source);
 
-  const thresholdMin = 100; // Minimum intensity threshold
-  const thresholdMax = 200; // Maximum intensity threshold
-  const threshold = vtkImageThreshold.newInstance({
-    lowerThreshold: thresholdMin,
-    upperThreshold: thresholdMax,
+   // Widget manager
+   const widgetManager = vtkWidgetManager.newInstance();
+   widgetManager.setRenderer(renderer);
+ 
+   const widget = vtkPolyLineWidget.newInstance();
+   widget.placeWidget(source.getBounds());
+ 
+   widgetManager.addWidget(widget);
+ 
+   widgetManager.enablePicking();
+   widgetManager.grabFocus(widget);
+
+   widget.getWidgetState().onModified(() => {
+    const states = widget.getWidgetState().getStatesWithLabel('handles') || [];
+    const selectedPartPositions = states.map((state) => {
+      const origin = state.getOrigin();
+      if (origin !== null && origin !== undefined) {
+        const coords = computeWorldToDisplay(renderer, ...origin);
+        console.log(coords)
+        return [coords[0], coords[1]];
+      } else {
+        console.error('Origin is null or undefined for state:', state);
+        return null; // Handle null origin gracefully
+      }
+    }).filter((pos) => pos !== null); // Filter out null positions
   });
 
-  threshold.setInputData(vtiReader.getOutputData());
-  // Apply marching cubes to extract contours
-  const marchingCubes = vtkImageMarchingCubes.newInstance({
-    contourValue: 0.0, // Adjust contour value as needed
+  bindSVGRepresentation(renderer, widget.getWidgetState(), {
+    mapState(widgetState, { size }) {
+      const states = widgetState.getStatesWithLabel('handles') || [];
+      return states
+        .filter((state) => state.getVisible() && state.getOrigin())
+        .map((state) => {
+          const coords = computeWorldToDisplay(renderer, ...state.getOrigin());
+          return [coords[0], size[1] - coords[1]];
+        });
+    },
+    render(data, h) {
+      return data.map(([x, y], index) =>
+        h(
+          'text',
+          {
+            key: index,
+            attrs: {
+              x,
+              y,
+              dx: 12,
+              dy: -12,
+              fill: 'white',
+              'font-size': 32,
+            },
+          },
+          `L${index}`
+        )
+      );
+    },
   });
-  marchingCubes.setInputConnection(threshold.getOutputPort());
+  
 
-  const mapper = vtkVolumeMapper.newInstance();
-  const actor = vtkVolume.newInstance();
-
-  actor.setMapper(mapper);
-  mapper.setInputData(segmentedImage);
-
-   // Add the segmented actor to the renderer
    renderer.addActor(actor);
+   renderer.getActiveCamera().set({ position: [1, 0, 1], viewUp: [0, 0, -1] });
    renderer.resetCamera();
    renderWindow.render();
-   */
+
+  buttonContainer5.addEventListener('click', () => {
+    saveSelectedRegion(widget.getWidgetState());
+  });
+
+
+  function saveSelectedRegion(widgetState) {
+    const states = widgetState.getStatesWithLabel('handles') || [];
+    const selectedPartPositions = states.map((state) => {
+      const origin = state.getOrigin();
+      if (origin !== null && origin !== undefined) {
+        const coords = computeWorldToDisplay(renderer, ...origin);
+        return [coords[0], coords[1]];
+      } else {
+        console.error('Origin is null or undefined for state:', state);
+        return null;
+      }
+    }).filter((pos) => pos !== null);
+
+    if (selectedPartPositions.length > 0) {
+      // Create a new vtkPolyData object from the selected points
+      const polyData = vtkPolyData.newInstance();
+      const points = vtkPoints.newInstance();
+
+      // Convert the selectedPartPositions array to a Uint8Array
+      const pointsData = new Uint8Array(selectedPartPositions.length * 3);
+      selectedPartPositions.forEach(([x, y], index) => {
+        pointsData[index * 3] = x;
+        pointsData[index * 3 + 1] = y;
+        pointsData[index * 3 + 2] = 0;
+      });
+
+      // Set the points data using the setData method
+      points.setData(pointsData, 3);
+      polyData.setPoints(points);
+
+      // Create a new vtkXMLPolyDataWriter to save the polydata
+    const writer = vtkXMLPolyDataWriter.newInstance();
+    const writerReader = vtkXMLPolyDataReader.newInstance();
+    writer.setFormat(vtkXMLWriter.FormatTypes.BINARY);
+    writer.setInputData(polyData);
+
+
+
+    // Create a Blob object from the output data of the writer
+    const fileContents= writer.write(polyData)
+    const textEncoder = new TextEncoder();
+    writerReader.parseAsArrayBuffer(textEncoder.encode(fileContents));
+    const blob = new Blob([fileContents], { type: 'text/plain' });
+    const a = window.document.createElement('a');
+    a.href = window.URL.createObjectURL(blob, { type: 'text/plain' });
+    a.download = "x.vti"
+    a.click()
+
+
+
+    } else {
+      console.log('No region selected to save.');
+    }
+  }
+
 
 }
 
@@ -146,7 +266,7 @@ function createViewerVolume(rootContainer, fileContents, options) {
   fullScreenRenderer.getContainer().style.width = "1420px";
   fullScreenRenderer.getContainer().style.height = "780px";
   fullScreenRenderer.getContainer().style.marginLeft = "20%";
-  fullScreenRenderer.getContainer().style.marginTop =  "0%";
+  fullScreenRenderer.getContainer().style.marginTop =  "20%";
 
   // Resize the fullScreenRenderer1
   fullScreenRenderer.resize();
@@ -216,6 +336,7 @@ function createViewerVolume(rootContainer, fileContents, options) {
   actor.getProperty().setSpecularPower(8.0);
   const controllerWidgetDiv = document.createElement("div");
   controllerWidgetDiv.style.marginLeft = "50px";
+  controllerWidgetDiv.style.marginTop = "15%";
   rootContainer.append(controllerWidgetDiv)
   const controllerWidget = vtkVolumeController.newInstance({
     size: [300, 200],
@@ -241,6 +362,11 @@ function createViewerVolume(rootContainer, fileContents, options) {
   buttonContainer3.addEventListener("click", () => {
     loadVolume(rootContainer,options);
   })
+  buttonContainer4.addEventListener("click", () => {
+    emptyContainer(controllerWidgetDiv);
+    loadSegmentation(rootContainer,options);
+  })
+  
   buttonContainer5.addEventListener("click", () => {
     const views = renderWindow.getViews();
     views.forEach((view) => {
@@ -298,7 +424,7 @@ function createViewerISO(rootContainer, fileContents, options) {
   fullScreenRenderer.getContainer().style.width = "1420px";
   fullScreenRenderer.getContainer().style.height = "780px";
   fullScreenRenderer.getContainer().style.marginLeft = "20%";
-  fullScreenRenderer.getContainer().style.marginTop =  "0%";
+  fullScreenRenderer.getContainer().style.marginTop =  "20%";
 
   // Resize the fullScreenRenderer1
   fullScreenRenderer.resize();
@@ -416,7 +542,7 @@ function createViewerRender(rootContainer, fileContents, options) {
   fullScreenRenderer.getContainer().style.width = "1420px";
   fullScreenRenderer.getContainer().style.height = "780px";
   fullScreenRenderer.getContainer().style.marginLeft = "20%";
-  fullScreenRenderer.getContainer().style.marginTop =  "0%";
+  fullScreenRenderer.getContainer().style.marginTop =  "20%";
 
   // Resize the fullScreenRenderer1
   fullScreenRenderer.resize();
@@ -435,6 +561,7 @@ function createViewerRender(rootContainer, fileContents, options) {
   actor.setMapper(mapper);
   mapper.setInputData(source);
   renderer.addActor(actor);
+  renderer.getActiveCamera().set({ position: [1, 1, 0], viewUp: [0, 0, -1] });
   renderer.resetCamera();
   renderWindow.render();
 
@@ -571,15 +698,15 @@ export function initLocalFileLoader(container) {
   myContainer.appendChild(buttonContainer1);
 
   buttonContainer2 = document.createElement("div");
-  buttonContainer2.innerHTML = `<button class="${style.dropButton2}">ISO Surface Render</button>`
+  buttonContainer2.innerHTML = `<button class="${style.dropButton2}">Volume Contour</button>`
   myContainer.appendChild(buttonContainer2);
 
   buttonContainer3 = document.createElement("div");
-  buttonContainer3.innerHTML = `<button class="${style.dropButton2}">Volume Render</button>`
+  buttonContainer3.innerHTML = `<button class="${style.dropButton2}">Gaussian</button>`
   myContainer.appendChild(buttonContainer3);
 
   buttonContainer4 = document.createElement("div");
-  buttonContainer4.innerHTML = `<button class="${style.dropButton2}">Segment Image</button>`
+  buttonContainer4.innerHTML = `<button class="${style.dropButton2}">Crop Image</button>`
   myContainer.appendChild(buttonContainer4);
 
   buttonContainer5 = document.createElement("div");
@@ -608,9 +735,9 @@ export function initLocalFileLoader(container) {
   fileInput.addEventListener("change", handleFile);
   fileContainer.addEventListener("click", (e) => fileInput.click());
   buttonContainer1.addEventListener("click", () => {
-  buttonContainer2.innerHTML = `<button class="${style.dropButton}">ISO Surface Render</button>`
-  buttonContainer3.innerHTML = `<button class="${style.dropButton}">Volume Render</button>`
-  buttonContainer4.innerHTML = `<button class="${style.dropButton}">Segment Image</button>`
+  buttonContainer2.innerHTML = `<button class="${style.dropButton}">Volume Contour</button>`
+  buttonContainer3.innerHTML = `<button class="${style.dropButton}">Gaussian</button>`
+  buttonContainer4.innerHTML = `<button class="${style.dropButton}">Crop Image</button>`
   buttonContainer5.innerHTML = `<button class="${style.dropButton}">Export</button>`
   load(myContainer, options);
   });

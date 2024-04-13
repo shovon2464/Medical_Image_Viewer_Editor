@@ -15,6 +15,7 @@
     "curry": "^1.2.0",
     "itk": "^12.4.0",
     "itk-vtk-viewer": "^14.50.1",
+    "snabbdom": "^3.6.2",
     "vtk.js": "^30.3.1"
   },
   "devDependencies": {
