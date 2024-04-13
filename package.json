@@ -26,13 +26,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/SabrinaNasrin/Web-Based-Visualization-of-3D-Medical-Data-using-vtk.js.git"
+    "url": ""
   },
   "bugs": {
-    "url": "https://github.com/SabrinaNasrin/Web-Based-Visualization-of-3D-Medical-Data-using-vtk.js/issues"
+    "url": ""
   },
   "engines": {
     "node": "16.18.1"
   },
-  "homepage": "https://github.com/SabrinaNasrin/Web-Based-Visualization-of-3D-Medical-Data-using-vtk.js#readme"
+  "homepage": ""
 }
