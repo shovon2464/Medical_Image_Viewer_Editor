@@ -106,7 +106,7 @@ function createViewerSegmentation(rootContainer, fileContents, options) {
   fullScreenRenderer.getContainer().style.width = "1420px";
   fullScreenRenderer.getContainer().style.height = "780px";
   fullScreenRenderer.getContainer().style.marginLeft = "20%";
-  fullScreenRenderer.getContainer().style.marginTop =  "20%";
+  fullScreenRenderer.getContainer().style.marginTop =  "0%";
 
   // Resize the fullScreenRenderer1
   fullScreenRenderer.resize();
@@ -266,7 +266,7 @@ function createViewerVolume(rootContainer, fileContents, options) {
   fullScreenRenderer.getContainer().style.width = "1420px";
   fullScreenRenderer.getContainer().style.height = "780px";
   fullScreenRenderer.getContainer().style.marginLeft = "20%";
-  fullScreenRenderer.getContainer().style.marginTop =  "20%";
+  fullScreenRenderer.getContainer().style.marginTop =  "0%";
 
   // Resize the fullScreenRenderer1
   fullScreenRenderer.resize();
@@ -424,7 +424,7 @@ function createViewerISO(rootContainer, fileContents, options) {
   fullScreenRenderer.getContainer().style.width = "1420px";
   fullScreenRenderer.getContainer().style.height = "780px";
   fullScreenRenderer.getContainer().style.marginLeft = "20%";
-  fullScreenRenderer.getContainer().style.marginTop =  "20%";
+  fullScreenRenderer.getContainer().style.marginTop =  "00%";
 
   // Resize the fullScreenRenderer1
   fullScreenRenderer.resize();
@@ -542,7 +542,7 @@ function createViewerRender(rootContainer, fileContents, options) {
   fullScreenRenderer.getContainer().style.width = "1420px";
   fullScreenRenderer.getContainer().style.height = "780px";
   fullScreenRenderer.getContainer().style.marginLeft = "20%";
-  fullScreenRenderer.getContainer().style.marginTop =  "20%";
+  fullScreenRenderer.getContainer().style.marginTop =  "00%";
 
   // Resize the fullScreenRenderer1
   fullScreenRenderer.resize();
